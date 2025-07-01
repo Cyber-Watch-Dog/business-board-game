@@ -16,33 +16,35 @@
     <p class="text-sm mt-4 text-gray-500">Redirecting to Lobby...</p>
   </div>
 
-  <script>
-    const socket = io();
+ <script>
+  const socket = io();
 
-    function generateRoomCode(length = 6) {
-      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-      return Array.from({ length }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-    }
+  function generateRoomCode(length = 6) {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    return Array.from({ length }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  }
 
-    const roomCode = generateRoomCode();
-    document.getElementById("roomCode").textContent = roomCode;
+  const roomCode = generateRoomCode();
+  document.getElementById("roomCode").textContent = roomCode;
 
-    socket.emit("create-room", roomCode);
+  // Emit create-room and wait for server to confirm
+  socket.emit("create-room", roomCode);
 
-    // Store host status & room code
-    localStorage.setItem("roomCode", roomCode);
-    localStorage.setItem("isHost", "true");
+  // Save info in localStorage for lobby page
+  localStorage.setItem("roomCode", roomCode);
+  localStorage.setItem("isHost", true);
 
-    // Redirect to lobby after short delay
-    setTimeout(() => {
-      window.location.href = "/lobby.html";
-    }, 1500);
+  // OPTIONAL: Add a delay to ensure room is created before navigating
+  socket.on("room-created", () => {
+    window.location.href = "/lobby.html";
+  });
 
-    function copyCode() {
-      navigator.clipboard.writeText(roomCode).then(() => {
-        alert("Room code copied!");
-      });
-    }
-  </script>
+  function copyCode() {
+    navigator.clipboard.writeText(roomCode).then(() => {
+      alert("Room code copied!");
+    });
+  }
+</script>
+
 </body>
 </html>
