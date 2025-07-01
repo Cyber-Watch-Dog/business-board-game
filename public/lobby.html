@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Lobby</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body class="bg-gray-100 font-sans min-h-screen flex items-center justify-center">
+  <div class="bg-white p-6 rounded-xl shadow-xl w-96">
+    <h1 class="text-2xl font-bold text-blue-700 mb-2">🎮 Game Lobby</h1>
+    <p class="text-sm text-gray-500">Room Code: <span id="room-code" class="font-mono text-black"></span></p>
+    
+    <div class="my-4">
+      <h2 class="text-lg font-semibold mb-1">Players:</h2>
+      <ul id="player-list" class="list-disc list-inside text-gray-700"></ul>
+    </div>
+
+    <button id="start-btn"
+      class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded w-full hidden">
+      Start Game
+    </button>
+  </div>
+
+  <script>
+    const socket = io();
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomCode = urlParams.get("room");
+
+    document.getElementById("room-code").textContent = roomCode;
+
+    let isHost = false;
+    let playerList = [];
+
+    // Join room again to sync
+    socket.emit("rejoin-room", roomCode);
+
+    // Add self to list
+    socket.on("player-list", (players, hostId) => {
+      playerList = players;
+      renderPlayers();
+
+      // Show start button if this client is host
+      if (socket.id === hostId) {
+        document.getElementById("start-btn").classList.remove("hidden");
+        isHost = true;
+      }
+    });
+
+    function renderPlayers() {
+      const ul = document.getElementById("player-list");
+      ul.innerHTML = "";
+      playerList.forEach(p => {
+        const li = document.createElement("li");
+        li.textContent = p;
+        ul.appendChild(li);
+      });
+    }
+
+    // Start game button
+    document.getElementById("start-btn").addEventListener("click", () => {
+      if (isHost) {
+        socket.emit("start-game", roomCode);
+      }
+    });
+
+    // Optional: redirect all to game page when started
+    socket.on("game-started", () => {
+      window.location.href = "/game.html?room=" + roomCode;
+    });
+  </script>
+</body>
+</html>
