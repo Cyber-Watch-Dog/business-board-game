@@ -14,15 +14,15 @@ io.on("connection", (socket) => {
     console.log(`🟢 Room ${roomCode} created by ${socket.id}`);
   });
 
-  socket.on("join-room", (roomCode) => {
+socket.on("join-room", (roomCode) => {
+  const rooms = io.sockets.adapter.rooms;
+  if (rooms.get(roomCode)) {
     socket.join(roomCode);
     console.log(`🔵 ${socket.id} joined room ${roomCode}`);
     io.to(roomCode).emit("player-joined", socket.id);
-  });
-
-  socket.on("disconnect", () => {
-    console.log("❌ User disconnected:", socket.id);
-  });
+  } else {
+    socket.emit("room-error");
+  }
 });
 
 http.listen(PORT, () => {
