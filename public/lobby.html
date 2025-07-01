@@ -3,71 +3,93 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Lobby</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="/socket.io/socket.io.js"></script>
+  <title>Game Lobby</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: #f3f4f6;
+    }
+    .card {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      width: 300px;
+      text-align: center;
+    }
+    .card h2 {
+      color: #4f46e5;
+    }
+    ul {
+      text-align: left;
+      padding-left: 1rem;
+    }
+    li {
+      margin-bottom: 6px;
+    }
+    button {
+      background: #22c55e;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      margin-top: 1rem;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #16a34a;
+    }
+  </style>
 </head>
-<body class="bg-gray-100 font-sans min-h-screen flex items-center justify-center">
-  <div class="bg-white p-6 rounded-xl shadow-xl w-96">
-    <h1 class="text-2xl font-bold text-blue-700 mb-2">🎮 Game Lobby</h1>
-    <p class="text-sm text-gray-500">Room Code: <span id="room-code" class="font-mono text-black"></span></p>
-    
-    <div class="my-4">
-      <h2 class="text-lg font-semibold mb-1">Players:</h2>
-      <ul id="player-list" class="list-disc list-inside text-gray-700"></ul>
-    </div>
-
-    <button id="start-btn"
-      class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded w-full hidden">
-      Start Game
-    </button>
+<body>
+  <div class="card">
+    <h2>🎮 Game Lobby</h2>
+    <p><strong>Room Code:</strong> <span id="room-code"></span></p>
+    <p><strong>Players:</strong></p>
+    <ul id="player-list"></ul>
+    <button id="start-game">Start Game</button>
   </div>
 
+  <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket = io();
+
+    // 🔁 Get room code from URL
     const urlParams = new URLSearchParams(window.location.search);
     const roomCode = urlParams.get("room");
 
-    document.getElementById("room-code").textContent = roomCode;
+    const playerList = document.getElementById("player-list");
+    const roomCodeText = document.getElementById("room-code");
+    const startGameBtn = document.getElementById("start-game");
 
-    let isHost = false;
-    let playerList = [];
+    roomCodeText.textContent = roomCode;
 
-    // Join room again to sync
+    // 🟢 Let server know we rejoined this room
     socket.emit("rejoin-room", roomCode);
 
-    // Add self to list
+    // 🔄 Server sends back current players
     socket.on("player-list", (players, hostId) => {
-      playerList = players;
-      renderPlayers();
-
-      // Show start button if this client is host
-      if (socket.id === hostId) {
-        document.getElementById("start-btn").classList.remove("hidden");
-        isHost = true;
-      }
-    });
-
-    function renderPlayers() {
-      const ul = document.getElementById("player-list");
-      ul.innerHTML = "";
-      playerList.forEach(p => {
+      playerList.innerHTML = "";
+      players.forEach(playerId => {
         const li = document.createElement("li");
-        li.textContent = p;
-        ul.appendChild(li);
+        li.textContent = playerId === hostId ? `${playerId} (host)` : playerId;
+        playerList.appendChild(li);
       });
-    }
-
-    // Start game button
-    document.getElementById("start-btn").addEventListener("click", () => {
-      if (isHost) {
-        socket.emit("start-game", roomCode);
-      }
     });
 
-    // Optional: redirect all to game page when started
+    // ▶️ Start game when button is clicked
+    startGameBtn.addEventListener("click", () => {
+      socket.emit("start-game", roomCode);
+    });
+
+    // 🎯 If game starts, go to game screen
     socket.on("game-started", () => {
-      window.location.href = "/game.html?room=" + roomCode;
+      window.location.href = `/game.html?room=${roomCode}`;
     });
   </script>
 </body>
