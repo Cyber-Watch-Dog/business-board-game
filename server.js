@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const http = require("http").createServer(app);
 const io = require("socket.io")(http);
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 
 app.use(express.static("public"));
 
@@ -14,15 +14,20 @@ io.on("connection", (socket) => {
     console.log(`🟢 Room ${roomCode} created by ${socket.id}`);
   });
 
-socket.on("join-room", (roomCode) => {
-  const rooms = io.sockets.adapter.rooms;
-  if (rooms.get(roomCode)) {
-    socket.join(roomCode);
-    console.log(`🔵 ${socket.id} joined room ${roomCode}`);
-    io.to(roomCode).emit("player-joined", socket.id);
-  } else {
-    socket.emit("room-error");
-  }
+  socket.on("join-room", (roomCode) => {
+    const rooms = io.sockets.adapter.rooms;
+    if (rooms.get(roomCode)) {
+      socket.join(roomCode);
+      console.log(`🔵 ${socket.id} joined room ${roomCode}`);
+      io.to(roomCode).emit("player-joined", socket.id);
+    } else {
+      socket.emit("room-error");
+    }
+  });
+
+  socket.on("disconnect", () => {
+    console.log("❌ User disconnected:", socket.id);
+  });
 });
 
 http.listen(PORT, () => {
