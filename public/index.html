@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Business Board Game</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-blue-400 min-h-screen flex flex-col items-center justify-center font-sans">
+  <div class="text-center mb-10">
+    <h1 class="text-4xl font-extrabold text-white">BUSINESS</h1>
+    <img src="https://cdn-icons-png.flaticon.com/512/254/254638.png" alt="Board Icon" class="w-20 mx-auto mt-2"/>
+  </div>
+  <div class="bg-white rounded-2xl p-6 shadow-lg w-80 text-center">
+    <h2 class="text-2xl font-bold mb-4 text-blue-700">Private</h2>
+    <p class="text-gray-600 mb-6">Would you like to create a private room or join one?</p>
+    <div class="flex flex-col gap-4">
+      <button onclick="window.location.href='create.html'" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 rounded-xl">CREATE</button>
+      <button onclick="window.location.href='join.html'" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 rounded-xl">JOIN</button>
+    </div>
+    <p class="text-xs text-gray-400 mt-6">Please make sure you and your friends are in the latest version.</p>
+  </div>
+</body>
+</html>
