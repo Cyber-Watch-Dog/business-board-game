@@ -25,7 +25,8 @@ io.on("connection", (socket) => {
 
     roomPlayers[roomCode] = [socket.id];
 
-    socket.emit("room-created"); // ✅ Frontend will redirect on this
+    // ✅ Notify client room is ready
+    socket.emit("room-created");
   });
 
   // JOIN ROOM
