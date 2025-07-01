@@ -3,94 +3,71 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Game Lobby</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      background: #f3f4f6;
-    }
-    .card {
-      background: white;
-      padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      width: 300px;
-      text-align: center;
-    }
-    .card h2 {
-      color: #4f46e5;
-    }
-    ul {
-      text-align: left;
-      padding-left: 1rem;
-    }
-    li {
-      margin-bottom: 6px;
-    }
-    button {
-      background: #22c55e;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      margin-top: 1rem;
-      font-size: 16px;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #16a34a;
-    }
-  </style>
+  <title>Lobby</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/socket.io/socket.io.js"></script>
 </head>
-<body>
-  <div class="card">
-    <h2>🎮 Game Lobby</h2>
-    <p><strong>Room Code:</strong> <span id="room-code"></span></p>
-    <p><strong>Players:</strong></p>
-    <ul id="player-list"></ul>
-    <button id="start-game">Start Game</button>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+  <div class="bg-white p-6 rounded-xl shadow-lg w-96 text-center">
+    <h2 class="text-2xl font-bold text-blue-700 mb-2">🎮 Game Lobby</h2>
+    <p class="text-gray-600">Room Code:</p>
+    <p id="roomCode" class="font-mono text-lg text-gray-800 mb-4">Loading...</p>
+
+    <p class="text-gray-600 font-semibold mb-2">Players:</p>
+    <ul id="playerList" class="text-left text-sm mb-4 px-4"></ul>
+
+    <button id="startBtn" onclick="startGame()"
+      class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-md w-full hidden">
+      Start Game
+    </button>
   </div>
 
-  <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket = io();
+    const roomCode = localStorage.getItem("roomCode");
+    const isHost = localStorage.getItem("isHost") === "true";
 
-    // 🔁 Get room code from URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const roomCode = urlParams.get("room");
+    document.getElementById("roomCode").textContent = roomCode || "N/A";
 
-    const playerList = document.getElementById("player-list");
-    const roomCodeText = document.getElementById("room-code");
-    const startGameBtn = document.getElementById("start-game");
+    // Keep track of players in this room
+    let players = [];
 
-    roomCodeText.textContent = roomCode;
+    socket.emit("join-room", roomCode);
 
-    // 🟢 Let server know we rejoined this room
-    socket.emit("rejoin-room", roomCode);
+    // Add yourself to list
+    socket.on("connect", () => {
+      const myId = socket.id;
+      if (!players.includes(myId)) {
+        players.push(myId);
+        renderPlayers();
+      }
+    });
 
-    // 🔄 Server sends back current players
-    socket.on("player-list", (players, hostId) => {
-      playerList.innerHTML = "";
-      players.forEach(playerId => {
+    socket.on("player-joined", (id) => {
+      if (!players.includes(id)) {
+        players.push(id);
+        renderPlayers();
+      }
+    });
+
+    function renderPlayers() {
+      const ul = document.getElementById("playerList");
+      ul.innerHTML = "";
+      players.forEach((id) => {
         const li = document.createElement("li");
-        li.textContent = playerId === hostId ? `${playerId} (host)` : playerId;
-        playerList.appendChild(li);
+        li.textContent = `${id}${id === players[0] && isHost ? " (host)" : ""}`;
+        ul.appendChild(li);
       });
-    });
 
-    // ▶️ Start game when button is clicked
-    startGameBtn.addEventListener("click", () => {
-      socket.emit("start-game", roomCode);
-    });
+      if (isHost) {
+        document.getElementById("startBtn").classList.remove("hidden");
+      }
+    }
 
-    // 🎯 If game starts, go to game screen
-    socket.on("game-started", () => {
-      window.location.href = `/game.html?room=${roomCode}`;
-    });
+    function startGame() {
+      alert("Game starting... 🚀");
+      // redirect or emit start signal to others (future step)
+    }
   </script>
 </body>
 </html>
