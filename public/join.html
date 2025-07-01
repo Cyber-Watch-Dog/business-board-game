@@ -31,15 +31,16 @@
       socket.emit("join-room", code);
       console.log("Joining room:", code);
 
-      // Optional: add redirect or status update
       socket.on("player-joined", (id) => {
-        alert("Successfully joined room! ID: " + id);
-        // Redirect to actual game board (future step)
+        localStorage.setItem("roomCode", code);
+        localStorage.setItem("isHost", false);
+        window.location.href = "/lobby.html";
       });
 
-      // Optional: handle error if room invalid
-      socket.on("room-error", () => {
-        document.getElementById("status").classList.remove("hidden");
+      socket.on("room-error", (msg) => {
+        const status = document.getElementById("status");
+        status.textContent = msg || "Invalid room code or room full";
+        status.classList.remove("hidden");
       });
     }
   </script>
